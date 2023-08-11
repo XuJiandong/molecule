@@ -32,7 +32,7 @@ syn = "2.0.27"
 
 
 [dev-dependencies]
-tempfile = "3"
+tempfile = "3.6.0"
 
 [features]
 default = []
