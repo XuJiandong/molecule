@@ -2,6 +2,7 @@ ci:
 	@set -eu; \
 	export RUSTFLAGS='-D warnings'; \
 	make fmt clippy; \
+	make ci-lazy-reader; \
 	make ci-examples ci-crates; \
 	echo "Success!"
 
@@ -63,4 +64,13 @@ ci-crates:
 ci-examples:
 	@set -eu; \
 	cd examples/ci-tests; \
-	make clean test
+	make clean test; \
+	cd - > /dev/null; \
+
+ci-lazy-reader:
+	@set -eu; \
+	cd examples/lazy-reader-tests; \
+	make test; \
+	cd - > /dev/null; \
+
+
