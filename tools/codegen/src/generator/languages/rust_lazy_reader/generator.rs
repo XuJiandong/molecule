@@ -393,6 +393,7 @@ fn generate_rust_common_array<W: io::Write>(
 ) -> io::Result<()> {
     let name = ident_new(plain_name);
     let q = quote! {
+        #[derive(Clone)]
         pub struct #name {
             pub cursor: Cursor,
         }
@@ -538,7 +539,7 @@ fn generate_rust_common_table<W: io::Write>(
 ) -> io::Result<()> {
     let name = ident_new(plain_name);
     let q = quote! {
-
+        #[derive(Clone)]
         pub struct #name {
             pub cursor: Cursor,
         }

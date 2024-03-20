@@ -79,7 +79,7 @@ impl DataSource {
             && offset + read_len <= self.cache_start_point + self.cache_actual_size
         {
             let read_point = offset - self.cache_start_point;
-            buf.copy_from_slice(&self.cache[read_point..(read_point + read_len)]);
+            buf[..read_len].copy_from_slice(&self.cache[read_point..(read_point + read_len)]);
             return Ok(read_len);
         }
         // Cache miss, read from reader and update cache
@@ -280,6 +280,14 @@ impl Cursor {
         let mut cur2 = self.clone();
         cur2.add_offset(offset)?;
         cur2.size = size;
+        cur2.validate()?;
+        Ok(cur2)
+    }
+
+    pub fn slice_by_start(&self, delta: usize) -> Result<Cursor, Error> {
+        let mut cur2 = self.clone();
+        cur2.add_offset(delta)?;
+        cur2.sub_size(delta)?;
         cur2.validate()?;
         Ok(cur2)
     }
