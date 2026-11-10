@@ -401,7 +401,7 @@ impl Cursor {
     /// of the original cursor.
     ///
     pub fn slice_by_offset(&self, offset: usize, size: usize) -> Result<Cursor, Error> {
-        if (offset + size) > self.size {
+        if offset > self.size || size > self.size - offset {
             return Err(Error::TotalSize(offset, size));
         }
         let mut cur = self.clone();
@@ -587,5 +587,43 @@ impl From<Vec<u8>> for Cursor {
 impl<const N: usize> From<[u8; N]> for Cursor {
     fn from(mem: [u8; N]) -> Self {
         Cursor::new(mem.len(), Box::new(mem.to_vec()))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{Cursor, Error};
+
+    #[test]
+    fn slice_by_offset_respects_parent_bounds() {
+        let source = Cursor::from([0u8, 1, 2, 3, 4, 5, 6, 7]);
+        let parent = source.slice_by_offset(2, 4).unwrap();
+        let slice = parent.slice_by_offset(1, 3).unwrap();
+        assert_eq!(slice.offset, 3);
+        assert_eq!(slice.size, 3);
+        assert_eq!(<[u8; 3]>::try_from(slice).unwrap(), [3, 4, 5]);
+
+        let empty = parent.slice_by_offset(4, 0).unwrap();
+        assert_eq!(empty.offset, 6);
+        assert_eq!(empty.size, 0);
+        assert!(matches!(
+            parent.slice_by_offset(3, 2),
+            Err(Error::TotalSize(3, 2))
+        ));
+        assert!(matches!(
+            parent.slice_by_offset(5, 0),
+            Err(Error::TotalSize(5, 0))
+        ));
+    }
+
+    #[test]
+    fn slice_by_offset_rejects_overflow() {
+        let parent = Cursor::from([0u8; 8]);
+        for (offset, size) in [(1, usize::MAX), (usize::MAX, 1)] {
+            assert!(matches!(
+                parent.slice_by_offset(offset, size),
+                Err(Error::TotalSize(_, _))
+            ));
+        }
     }
 }
